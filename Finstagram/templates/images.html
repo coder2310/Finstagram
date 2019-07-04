@@ -1,0 +1,104 @@
+<link rel="stylesheet" type="text/css" href="{{url_for('static', filename='images.css')}}" >
+
+<html>
+    <head>
+        <title>Finstagram</title>
+    </head>
+    <body>
+        <h1>Image Gallery</h1>
+        {% if error %}
+            <div style="color:red">{{ error }}</div>
+        {% endif %}
+        <table style="width: 100%">
+        {#
+        for every photoID and its corresponding followers,
+        get photo ( with filepath ) and iterate through followers
+        to print individual follower
+        #}
+            {% for photoID, data in images.items( ) %}
+                <tr>
+                    <td>
+                        <img src="/image/{{data['filePath']}}" width="200"/>
+                    </td>
+                    <td>
+                        By: {{ data[ "name" ] }} ({{ data[ "photoOwner" ] }})
+                    </td>
+                    <td>
+                        Uploaded on: {{ data[ "timestamp" ] }}
+                    </td>
+                    <td> 
+                        <i>{{ data[ "caption" ] }}</i>
+                    </td>
+                    <td>
+                        {#
+                        if user liked the photo, show "unlike photo"
+                        else, if the user doesnt like the photo, then show "like photo"
+                        #}
+                        {% if data[ "currentUser" ] in data[ "likes" ] %}
+                            <a href="/images?photoID={{photoID}}&option=unlike">Unlike Photo</a>
+                        {% else %}
+                            <a href="/images?photoID={{photoID}}&option=like">Like Photo</a>
+                        {% endif %}
+                        
+                        {# 
+                        if user is the owner of photo, show 
+                        delete photo button
+                        #}
+                        {% if data[ "userIsPhotoOwner" ] %}
+                            <a href="/images?photoID={{photoID}}&option=delete" style="color: red">Delete Photo</a>
+                        {% endif %}
+
+                        <form action="/tagPerson?photoID={{photoID}}" method="POST">
+                            <input type="text" name="taggedUser" placeholder="Enter who you want to tag">
+                            <input type="submit" value="Submit">
+                        </form>
+                    </td>
+                    <td><ul>
+
+
+                        Tagged:<br>
+                        {% for taggedUser in data[ "tags" ] %}
+                            {% if data[ "tags" ][ taggedUser ] %} 
+                                <li>{{ taggedUser }}
+                                {% if taggedUser == data[ "currentUser" ] %}
+                                    <a href="/images?photoID={{photoID}}&option=rejectTag" stlye="color:red">
+                                        Delete Tag
+                                    </a>
+                                {% endif %}
+                                </li>
+                            {% else %} 
+                                <li style="color:red">
+                                    A request has been sent to tag you in this photo. 
+                                    Accept tag?
+                                    <br>
+                                    <a href="/images?photoID={{photoID}}&option=acceptTag" stlye="color:red">
+                                        Yes
+                                    </a> <br>            
+                                    <a href="/images?photoID={{photoID}}&option=rejectTag" stlye="color:red">
+                                        No
+                                    </a>
+                                </li>
+                            {% endif %}
+                        {% endfor %}
+
+
+                        Liked by:
+                        {% for like in data[ "likes" ] %}
+                            <li>{{ like }}</li>    
+                        {% endfor %}
+                        Comments:
+                            <form action="/addComment?photoID={{photoID}}" method="POST">
+                                <input type="text" name="comment" placeholder="Enter your comment:">
+                                <input type="submit" value="Add comment">
+                            </form>
+                            <br>
+                            {% for comment in data[ "comments" ] %}
+                                <b>{{ comment[ 0 ] }}:</b> {{ comment[ 1 ] }}<br>
+                            {% endfor %}
+                    </ul></td>
+                </tr>
+            {% endfor %}
+        </table>
+        <a href="/">Go back</a>
+    </body>
+</html>
